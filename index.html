@@ -9,10 +9,9 @@
     <!-- HTML2Canvas 라이브러리 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <style>
-        /* 글씨 크기 조정 및 이름 아래 검은 줄 제거 */
         body {
             font-family: 'Dongle', sans-serif;
-            font-size: 110%; /* 전체 글씨 크기 10% 줄임 */
+            font-size: 150%;
             margin: 0;
             padding: 0;
             display: flex;
@@ -23,348 +22,437 @@
         }
 
         .container {
-            width: 90%; /* 전체 너비를 90%로 조정 */
-            max-width: 720px; /* 최대 너비를 720px로 제한 */
+            width: 90%;
+            max-width: 720px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .date-info-container {
-            background-color: lightyellow;
-            border-radius: 10px;
-            padding: 15px; /* 패딩을 15px로 조정 */
-            margin-bottom: 15px; /* 마진을 15px로 조정 */
-            font-size: 22px; /* 폰트 크기를 22px로 조정 */
-        }
-
-        .date-info {
-            text-align: center;
-            font-size: 40px; /* 날짜 크기를 40px로 조정 */
-        }
-
         .participant {
             display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
             background-color: #ffffff;
             border: 1px solid #ddd;
-            border-radius: 8px; /* 테두리 반경을 8px로 조정 */
-            padding: 8px; /* 패딩을 8px로 조정 */
-            margin-bottom: 8px; /* 마진을 8px로 조정 */
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
             width: 100%;
             cursor: pointer;
             position: relative;
         }
 
         .participant-img {
-            width: 80px; /* 이미지 크기를 80px로 조정 */
-            height: 80px; /* 이미지 크기를 80px로 조정 */
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             object-fit: contain;
-            margin-right: 10px; /* 마진을 10px로 조정 */
+            margin-bottom: 10px;
         }
 
         .participant div, .participant a {
-            margin: 0 5px; /* 마진을 0 5px로 조정 */
+            margin: 5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 140%; /* 이름 크기를 140%로 조정 */
+            font-size: 120%;
             font-weight: bold;
-            text-decoration: none; /* 이름 아래 검은 줄 제거 */
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .date-info-container {
+            background-color: lightyellow;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .date-info {
+            text-align: center;
+            font-size: 40px;
         }
 
         .call-button, .reset-button, .capture-button {
             background-color: #ffff99;
             color: black;
-            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
+            padding: 6px 12px;
             text-decoration: none;
             border-radius: 8px;
             text-align: center;
-            margin-top: 8px; /* 마진을 8px로 조정 */
-            font-size: 18px; /* 버튼 폰트 크기를 18px로 조정 */
+            margin-top: 8px;
+            font-size: 16px;
             border: none;
             cursor: pointer;
             box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .participant:hover {
-            /* 마우스가 행 위에 올라갔을 때 색상 변경 제거 */
+        .summary-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 100; /* 다른 요소 위에 표시하기 위해 z-index 설정 */
         }
 
-        .name-box {
-            background-color: lightyellow;
-            border-radius: 8px;
-            padding: 3px 8px; /* 패딩을 3px 8px로 조정 */
-            cursor: pointer;
-            font-size: 16px; /* 폰트 크기를 16px로 조정 */
-            text-decoration: none; /* 이름의 하이퍼링크 제거 */
-        }
-
-        .name-box:hover {
-            /* 마우스가 행 위에 올라갔을 때 색상 변경 제거 */
-        }
-
-        .note-input {
-            flex-grow: 1;
-            min-width: 80px; /* 최소 너비를 80px로 조정 */
-            margin-left: 5px; /* 마진을 5px로 조정 */
-            padding: 3px 8px; /* 패딩을 3px 8px로 조정 */
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px; /* 폰트 크기를 14px로 조정 */
-        }
-
-        .status-button {
-            background-color: #ffa07a; /* 매우 연한 주황색 */
-            padding: 8px 20px; /* 패딩을 8px 20px로 조정 */
-            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
-            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+        .summary-button {
+            background-color: #ffa07a;
+            padding: 12px 24px; /* 기존 패딩보다 크게 설정 */
+            margin: 0 10px;
+            border-radius: 16px;
+            font-size: 24px; /* 기존 폰트 크기보다 크게 설정 */
             cursor: pointer;
             border: none;
             outline: none;
         }
 
-        .summary-container {
+        .fixed-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             display: flex;
-            justify-content: center;
-            margin-top: 15px; /* 마진을 15px로 조정 */
+            justify-content: space-around; /* 내부 버튼들이 균등하게 배치되도록 설정 */
+            padding: 10px 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid #ddd; /* 상단에 경계선 추가 */
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2); /* 상단에 그림자 효과 */
+            z-index: 100; /* 다른 요소 위에 표시 */
         }
 
-        .summary-button {
-            background-color: #ffa07a; /* 연한 주황색 */
-            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
-            margin: 0 5px; /* 마진을 0 5px로 조정 */
-            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
-            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+        .control-button, .summary-button {
+            background-color: #ffa07a;
+            padding: 12px 24px; /* 크기를 두 배로 증가 */
+            margin: 0 5px;
+            border-radius: 16px;
+            font-size: 18px; /* 폰트 크기 증가 */
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .status-button {
+            background-color: #ffa07a;
+            padding: 8px 15px;
+            border-radius: 16px;
+            font-size: 14px;
             cursor: pointer;
             border: none;
             outline: none;
         }
 
         .number-button {
-            background-color: #9370DB; /
+            background-color: purple;
             color: white;
-            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
-            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
-            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+            padding: 10px 15px;
+            border-radius: 16px;
+            font-size: 18px;
             cursor: pointer;
             border: none;
             outline: none;
-            margin-right: 5px; /* 마진을 5px로 조정 */
+            margin-right: 5px;
+            margin-bottom: 5px;
         }
 
         @media only screen and (max-width: 600px) {
             .container {
-                padding: 5px; /* 패딩을 5px로 조정 */
-            }
-
-            .participant {
-                flex-wrap: wrap;
+                padding: 5px;
             }
 
             .participant div, .participant a {
-                flex: 1;
-                white-space: normal;
+                flex-basis: 50%;
+                max-width: 50%;
+                text-align: center;
             }
+
+            .participant div:nth-child(3), .participant div:nth-child(4), .participant div:nth-child(5), .participant div:nth-child(6) {
+                font-size: 200%;
+            }
+
+            .number-button, .status-button {
+                font-size: 70%;
+            }
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .popup-image {
+            max-width: 90%;
+            max-height: 80vh;
+        }
+
+        .popup-close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .fixed-container {
+            flex-wrap: nowrap; /* 한 줄에 모든 버튼을 유지 */
+        }
+
+        .control-button, .summary-button {
+            font-size: 12px; /* 모바일에서 폰트 크기를 더 줄임 */
+            padding: 4px 8px; /* 모바일에서 패딩을 더 줄임 */
         }
     </style>
 </head>
 <body>
 
-<!-- 날짜와 요일 표시 -->
 <div class="date-info-container">
     <div id="date-info" class="date-info"></div>
 </div>
-
-<!-- 전체 출석 버튼 -->
-<button id="all-attendance-button" class="summary-button" style="background-color: #ffa07a; margin-bottom: 15px;">전체 출석</button>
-
+<div class="event-name-container" style="text-align: center;">
+    <input type="text" id="event-name-input" placeholder="[행사명을 입력하세요]" style="font-size: 24px; text-align: center; width: 80%; margin: 20px auto; padding: 10px;">
+</div>
 <div id="participants" class="container"></div>
 
-<button id="reset-button" class="reset-button">전체 초기화</button>
-<button id="capture-button" class="capture-button">화면 캡처</button>
-
-<div class="summary-container">
+<div class="fixed-container">
+    <button id="all-attendance-button" class="control-button">올출석</button>
+    <button id="reset-button" class="control-button">리셋</button>
     <button id="attendance-summary" class="summary-button">출석: 0</button>
     <button id="tardy-summary" class="summary-button">지각: 0</button>
     <button id="absent-summary" class="summary-button">결석: 0</button>
 </div>
 
+<div id="popup-overlay" class="popup-overlay">
+    <div class="popup-content">
+        <img id="popup-image" class="popup-image" src="" alt="Captured Image">
+        <button id="popup-close-button" class="popup-close-button">&times;</button>
+    </div>
+</div>
+<div style="height: 50px;"></div>
 <script>
-async function fetchData() {
-    const Id = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
-    const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
-    const range = 'sheet3';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+    async function fetchSheetData() {
+        const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
+        const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
+        const range = 'Sheet3';
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.values;
-    } catch (error) {
-        console.error('Error fetching sheet data:', error);
-        return [];
-    }
-}
-
-function createParticipantElement(participantData, index) {
-    const [serial, name, phone, additionalPhone, photoUrl] = participantData;
-
-    const participantDiv = document.createElement('div');
-    participantDiv.classList.add('participant');
-    participantDiv.dataset.defaultColor = '#ffffff';
-
-    const statusButton = document.createElement('button');
-    statusButton.textContent = '터치';
-    statusButton.classList.add('status-button');
-
-    const serialDiv = document.createElement('div');
-    serialDiv.textContent = serial;
-    serialDiv.classList.add('serial-number');
-    serialDiv.style.marginRight = '10px'; /* 학생 순번을 오른쪽으로 조금 이동 */
-    
-    const numberButton = document.createElement('button');
-    numberButton.textContent = index + 1;
-    numberButton.classList.add('number-button');
-
-    const nameDiv = document.createElement('div');
-    nameDiv.textContent = name || '-';
-    nameDiv.classList.add('name-box');
-
-    const callButton1 = document.createElement('a');
-    if (phone && phone.trim() !== '') {
-        callButton1.href = `tel:${phone}`;
-        callButton1.className = 'call-button';
-        callButton1.textContent = '전화';
-    } else {
-        callButton1.textContent = '-';
-        participantDiv.classList.add('no-phone');
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.values;
+        } catch (error) {
+            console.error('Error fetching sheet data:', error);
+            return [];
+        }
     }
 
-    const callButton2 = document.createElement('a');
-    if (additionalPhone && additionalPhone.trim() !== '') {
-        callButton2.href = `tel:${additionalPhone}`;
-        callButton2.className = 'call-button';
-        callButton2.textContent = '학부모';
-    } else {
-        callButton2.textContent = '-';
-    }
+    function createParticipantElement(participantData, index) {
+        const [serial, name, phone, additionalPhone, photoUrl] = participantData;
 
-    const noteInput = document.createElement('input');
-    noteInput.type = 'text';
-    noteInput.placeholder = '출결 특이사항';
-    noteInput.classList.add('note-input');
+        const participantDiv = document.createElement('div');
+        participantDiv.classList.add('participant');
+        participantDiv.dataset.defaultColor = '#ffffff';
 
-    participantDiv.appendChild(numberButton);
-    participantDiv.appendChild(serialDiv);
-    participantDiv.appendChild(statusButton);
-    
-    if (photoUrl) {
-        const img = document.createElement('img');
-        img.src = photoUrl;
-        img.alt = 'Participant Image';
-        img.classList.add('participant-img');
-        participantDiv.appendChild(img);
-    }
+        const numberButton = document.createElement('button');
+        numberButton.textContent = index + 1;
+        numberButton.classList.add('number-button');
 
-    participantDiv.appendChild(nameDiv);
-    participantDiv.appendChild(callButton1);
-    participantDiv.appendChild(callButton2);
-    participantDiv.appendChild(noteInput);
+        const statusButton = document.createElement('button');
+        statusButton.textContent = '터치';
+        statusButton.classList.add('status-button');
 
-    let clickCount = 0;
-    statusButton.onclick = () => {
-        clickCount++;
-        switch (clickCount) {
-            case 1:
-                participantDiv.style.backgroundColor = 'lightskyblue'; /* 연한 하늘색 */
-                statusButton.textContent = '출석';
-                break;
-            case 2:
-                participantDiv.style.backgroundColor = 'lightpink';
-                statusButton.textContent = '지각';
-                break;
-            case 3:
-                participantDiv.style.backgroundColor = 'red';
-                statusButton.textContent = '결석';
-                break;
-            case 4:
-                clickCount = 0;
-                participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
-                statusButton.textContent = '터치';
-                break;
+        const serialDiv = document.createElement('div');
+        serialDiv.textContent = serial;
+        serialDiv.classList.add('serial-number');
+        serialDiv.style.marginRight = '10px';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = name || '-';
+        nameDiv.classList.add('name-box');
+
+        const callButton1 = document.createElement('a');
+        if (phone && phone.trim() !== '') {
+            callButton1.href = `tel:${phone}`;
+            callButton1.className = 'call-button';
+            callButton1.textContent = '전화';
+        } else {
+            callButton1.textContent = '-';
+            participantDiv.classList.add('no-phone');
         }
 
-        // Update summary counts
-        updateSummaryCounts();
-    };
+        const callButton2 = document.createElement('a');
+        if (additionalPhone && additionalPhone.trim() !== '') {
+            callButton2.href = `tel:${additionalPhone}`;
+            callButton2.className = 'call-button';
+            callButton2.textContent = '학부모';
+        } else {
+            callButton2.textContent = '-';
+        }
 
-    return participantDiv;
-}
+        const noteInput = document.createElement('input');
+        noteInput.type = 'text';
+        noteInput.placeholder = '출결 특이사항';
+        noteInput.classList.add('note-input');
 
-async function displayParticipants() {
-    const data = await fetchSheetData();
-    const container = document.getElementById('participants');
-    data.slice(1).forEach((participantData, index) => {
-        const participantElement = createParticipantElement(participantData, index );
-        container.appendChild(participantElement);
-    });
-}
+        participantDiv.appendChild(numberButton);
+        participantDiv.appendChild(statusButton);
+        participantDiv.appendChild(serialDiv);
+        participantDiv.appendChild(nameDiv);
+        participantDiv.appendChild(callButton1);
+        participantDiv.appendChild(callButton2);
+        participantDiv.appendChild(noteInput);
 
-window.onload = () => {
+        if (photoUrl) {
+            const img = document.createElement('img');
+            img.src = photoUrl;
+            img.alt = 'Participant Image';
+            img.classList.add('participant-img');
+            participantDiv.insertBefore(img, statusButton.nextSibling);
+        }
+
+        let clickCount = 0;
+        statusButton.onclick = () => {
+            clickCount++;
+            switch (clickCount) {
+                case 1:
+                    participantDiv.style.backgroundColor = 'lightskyblue';
+                    statusButton.textContent = '출석';
+                    break;
+                case 2:
+                    participantDiv.style.backgroundColor = 'lightpink';
+                    statusButton.textContent = '지각';
+                    break;
+                case 3:
+                    participantDiv.style.backgroundColor = 'red';
+                    statusButton.textContent = '결석';
+                    break;
+                case 4:
+                    clickCount = 0;
+                    participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
+                    statusButton.textContent = '터치';
+                    break;
+            }
+
+            updateSummaryCounts();
+            saveParticipantState(index, { clickCount, status: statusButton.textContent, backgroundColor: participantDiv.style.backgroundColor });
+        };
+
+        restoreParticipantState(participantDiv, index, (state) => {
+            clickCount = state.clickCount;
+            statusButton.textContent = state.status;
+            participantDiv.style.backgroundColor = state.backgroundColor;
+        });
+
+        return participantDiv;
+    }
+
+    function saveParticipantState(index, state) {
+        const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
+        participantsState[index] = state;
+        localStorage.setItem('participantsState', JSON.stringify(participantsState));
+    }
+
+    function restoreParticipantState(participantDiv, index, callback) {
+        const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
+        const state = participantsState[index];
+        if (state) {
+            if (callback) callback(state);
+        }
+    }
+
+    async function displayParticipants() {
+        const data = await fetchSheetData();
+        const container = document.getElementById('participants');
+        data.slice(1).forEach((participantData, index) => {
+            const participantElement = createParticipantElement(participantData, index);
+            container.appendChild(participantElement);
+        });
+    }
+
+   
+  
+   
+  window.onload = () => {
     displayParticipants();
     showDateInfo();
+    setupButtons(); // 버튼 기능 설정
+    restoreParticipantStates(); // 참가자 상태 복원
+    restoreEventData(); // 이벤트 데이터 복원
+    updateSummaryCounts(); // 출석, 지각, 결석 수 업데이트
 };
 
-// Reset button element
-const resetButton = document.getElementById('reset-button');
-resetButton.onclick = () => {
-    const participantElements = document.querySelectorAll('.participant');
-    participantElements.forEach(element => {
-        element.style.backgroundColor = element.dataset.defaultColor;
+function restoreEventData() {
+    const eventNameInput = document.getElementById('event-name-input');
+    const noteInput = document.getElementById('note-input');
+
+    // 로컬 스토리지에서 저장된 값 불러오기
+    const eventName = localStorage.getItem('eventName');
+    const note = localStorage.getItem('note');
+
+    // 값이 있으면 입력란에 채우기
+    if (eventName) {
+        eventNameInput.value = eventName;
+    }
+    if (note) {
+        noteInput.value = note;
+    }
+
+    // 입력값이 변경될 때마다 로컬 스토리지에 저장
+    eventNameInput.addEventListener('input', function() {
+        localStorage.setItem('eventName', this.value);
     });
-};
-
-// Capture button element
-const captureButton = document.getElementById('capture-button');
-captureButton.onclick = () => {
-    // Capture the container element
-    html2canvas(document.querySelector('.container')).then(canvas => {
-        // Convert the canvas to image
-        const imageData = canvas.toDataURL();
-        // Create a link element to download the image
-        const link = document.createElement('a');
-        link.download = 'attendance.png';
-        link.href = imageData;
-        // Trigger the click event to start downloading
-        link.click();
+    noteInput.addEventListener('input', function() {
+        localStorage.setItem('note', this.value);
     });
-};
+}
 
-// Summary button elements
-const attendanceSummaryButton = document.getElementById('attendance-summary');
-const tardySummaryButton = document.getElementById('tardy-summary');
-const absentSummaryButton = document.getElementById('absent-summary');
-
-attendanceSummaryButton.onclick = updateSummaryCounts;
-tardySummaryButton.onclick = updateSummaryCounts;
-absentSummaryButton.onclick = updateSummaryCounts;
-
-// 전체 출석 버튼 클릭 시
-const allAttendanceButton = document.getElementById('all-attendance-button');
-allAttendanceButton.onclick = () => {
-    const statusButtons = document.querySelectorAll('.status-button');
-    statusButtons.forEach(button => {
-        button.textContent = '출석';
-        button.parentElement.style.backgroundColor = 'lightskyblue'; /* 연한 하늘색 */
+function setupButtons() {
+    const allAttendanceButton = document.getElementById('all-attendance-button');
+    const resetButton = document.getElementById('reset-button');
+    
+    allAttendanceButton.addEventListener('click', function() {
+        document.querySelectorAll('.participant').forEach((participant, index) => {
+            participant.style.backgroundColor = 'lightskyblue';
+            const statusButton = participant.querySelector('.status-button');
+            statusButton.textContent = '출석';
+            saveParticipantState(index, { clickCount: 1, status: '출석', backgroundColor: 'lightskyblue' });
+        });
+        updateSummaryCounts();
     });
 
-    // Update summary counts
-    updateSummaryCounts();
-};
+    resetButton.addEventListener('click', function() {
+        localStorage.removeItem('participantsState');
+        location.reload();
+    });
+}
 
-// Function to show today's date and day of the week
 function showDateInfo() {
     const dateInfoElement = document.getElementById('date-info');
     const today = new Date();
@@ -373,15 +461,29 @@ function showDateInfo() {
     dateInfoElement.textContent = dateString;
 }
 
-// Function to update summary counts
-function updateSummaryCounts() {
+function restoreParticipantStates() {
     const participantElements = document.querySelectorAll('.participant');
+    participantElements.forEach((element, index) => {
+        restoreParticipantState(element, index, (state) => {
+            const statusButton = element.querySelector('.status-button');
+            element.style.backgroundColor = state.backgroundColor;
+            statusButton.textContent = state.status;
+            // 터치 횟수가 0이 아닌 경우에만 상태를 업데이트
+            if (state.clickCount !== 0) {
+                updateSummaryCounts();
+            }
+        });
+    });
+}
+
+function updateSummaryCounts() {
     let attendanceCount = 0;
     let tardyCount = 0;
     let absentCount = 0;
+
+    const participantElements = document.querySelectorAll('.participant');
     participantElements.forEach(element => {
         const statusButton = element.querySelector('.status-button');
-        const backgroundColor = window.getComputedStyle(element).getPropertyValue('background-color');
         if (statusButton.textContent === '출석') {
             attendanceCount++;
         } else if (statusButton.textContent === '지각') {
@@ -390,11 +492,23 @@ function updateSummaryCounts() {
             absentCount++;
         }
     });
+
+    const attendanceSummaryButton = document.getElementById('attendance-summary');
+    const tardySummaryButton = document.getElementById('tardy-summary');
+    const absentSummaryButton = document.getElementById('absent-summary');
     attendanceSummaryButton.textContent = `출석: ${attendanceCount}`;
     tardySummaryButton.textContent = `지각: ${tardyCount}`;
     absentSummaryButton.textContent = `결석: ${absentCount}`;
+
+    // 로컬 스토리지에 출석, 지각, 결석 수를 저장
+    localStorage.setItem('attendanceCount', attendanceCount);
+    localStorage.setItem('tardyCount', tardyCount);
+    localStorage.setItem('absentCount', absentCount);
 }
+
 </script>
+
+
 
 </body>
 </html>
