@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출석체크 명렬표</title>
+    <!-- Google Fonts에서 Dongle 폰트 가져오기 -->
+    <link href="https://fonts.googleapis.com/css2?family=Dongle:wght@300&display=swap" rel="stylesheet">
+    <!-- HTML2Canvas 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <style>
+        /* 글씨 크기 조정 및 이름 아래 검은 줄 제거 */
+        body {
+            font-family: 'Dongle', sans-serif;
+            font-size: 110%; /* 전체 글씨 크기 10% 줄임 */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f0f8ff;
+        }
+
+        .container {
+            width: 90%; /* 전체 너비를 90%로 조정 */
+            max-width: 720px; /* 최대 너비를 720px로 제한 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .date-info-container {
+            background-color: lightyellow;
+            border-radius: 10px;
+            padding: 15px; /* 패딩을 15px로 조정 */
+            margin-bottom: 15px; /* 마진을 15px로 조정 */
+            font-size: 22px; /* 폰트 크기를 22px로 조정 */
+        }
+
+        .date-info {
+            text-align: center;
+            font-size: 40px; /* 날짜 크기를 40px로 조정 */
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px; /* 테두리 반경을 8px로 조정 */
+            padding: 8px; /* 패딩을 8px로 조정 */
+            margin-bottom: 8px; /* 마진을 8px로 조정 */
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .participant-img {
+            width: 80px; /* 이미지 크기를 80px로 조정 */
+            height: 80px; /* 이미지 크기를 80px로 조정 */
+            border-radius: 50%;
+            object-fit: contain;
+            margin-right: 10px; /* 마진을 10px로 조정 */
+        }
+
+        .participant div, .participant a {
+            margin: 0 5px; /* 마진을 0 5px로 조정 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 140%; /* 이름 크기를 140%로 조정 */
+            font-weight: bold;
+            text-decoration: none; /* 이름 아래 검은 줄 제거 */
+        }
+
+        .call-button, .reset-button, .capture-button {
+            background-color: #ffff99;
+            color: black;
+            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
+            text-decoration: none;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 8px; /* 마진을 8px로 조정 */
+            font-size: 18px; /* 버튼 폰트 크기를 18px로 조정 */
+            border: none;
+            cursor: pointer;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .participant:hover {
+            /* 마우스가 행 위에 올라갔을 때 색상 변경 제거 */
+        }
+
+        .name-box {
+            background-color: lightyellow;
+            border-radius: 8px;
+            padding: 3px 8px; /* 패딩을 3px 8px로 조정 */
+            cursor: pointer;
+            font-size: 16px; /* 폰트 크기를 16px로 조정 */
+            text-decoration: none; /* 이름의 하이퍼링크 제거 */
+        }
+
+        .name-box:hover {
+            /* 마우스가 행 위에 올라갔을 때 색상 변경 제거 */
+        }
+
+        .note-input {
+            flex-grow: 1;
+            min-width: 80px; /* 최소 너비를 80px로 조정 */
+            margin-left: 5px; /* 마진을 5px로 조정 */
+            padding: 3px 8px; /* 패딩을 3px 8px로 조정 */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+        }
+
+        .status-button {
+            background-color: #ffa07a; /* 매우 연한 주황색 */
+            padding: 8px 20px; /* 패딩을 8px 20px로 조정 */
+            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
+            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .summary-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px; /* 마진을 15px로 조정 */
+        }
+
+        .summary-button {
+            background-color: #ffa07a; /* 연한 주황색 */
+            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
+            margin: 0 5px; /* 마진을 0 5px로 조정 */
+            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
+            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .number-button {
+            background-color: #9370DB; /
+            color: white;
+            padding: 8px 15px; /* 패딩을 8px 15px로 조정 */
+            border-radius: 16px; /* 테두리 반경을 16px로 조정 */
+            font-size: 14px; /* 폰트 크기를 14px로 조정 */
+            cursor: pointer;
+            border: none;
+            outline: none;
+            margin-right: 5px; /* 마진을 5px로 조정 */
+        }
+
+        @media only screen and (max-width: 600px) {
+            .container {
+                padding: 5px; /* 패딩을 5px로 조정 */
+            }
+
+            .participant {
+                flex-wrap: wrap;
+            }
+
+            .participant div, .participant a {
+                flex: 1;
+                white-space: normal;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 날짜와 요일 표시 -->
+<div class="date-info-container">
+    <div id="date-info" class="date-info"></div>
+</div>
+
+<!-- 전체 출석 버튼 -->
+<button id="all-attendance-button" class="summary-button" style="background-color: #ffa07a; margin-bottom: 15px;">전체 출석</button>
+
+<div id="participants" class="container"></div>
+
+<button id="reset-button" class="reset-button">전체 초기화</button>
+<button id="capture-button" class="capture-button">화면 캡처</button>
+
+<div class="summary-container">
+    <button id="attendance-summary" class="summary-button">출석: 0</button>
+    <button id="tardy-summary" class="summary-button">지각: 0</button>
+    <button id="absent-summary" class="summary-button">결석: 0</button>
+</div>
+
+<script>
+async function fetchSheetData() {
+    const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
+    const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
+    const range = 'Sheet1';
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.values;
+    } catch (error) {
+        console.error('Error fetching sheet data:', error);
+        return [];
+    }
+}
+
+function createParticipantElement(participantData, index) {
+    const [serial, name, phone, additionalPhone, photoUrl] = participantData;
+
+    const participantDiv = document.createElement('div');
+    participantDiv.classList.add('participant');
+    participantDiv.dataset.defaultColor = '#ffffff';
+
+    const statusButton = document.createElement('button');
+    statusButton.textContent = '터치';
+    statusButton.classList.add('status-button');
+
+    const serialDiv = document.createElement('div');
+    serialDiv.textContent = serial;
+    serialDiv.classList.add('serial-number');
+    serialDiv.style.marginRight = '10px'; /* 학생 순번을 오른쪽으로 조금 이동 */
+    
+    const numberButton = document.createElement('button');
+    numberButton.textContent = index + 1;
+    numberButton.classList.add('number-button');
+
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = name || '-';
+    nameDiv.classList.add('name-box');
+
+    const callButton1 = document.createElement('a');
+    if (phone && phone.trim() !== '') {
+        callButton1.href = `tel:${phone}`;
+        callButton1.className = 'call-button';
+        callButton1.textContent = '전화';
+    } else {
+        callButton1.textContent = '-';
+        participantDiv.classList.add('no-phone');
+    }
+
+    const callButton2 = document.createElement('a');
+    if (additionalPhone && additionalPhone.trim() !== '') {
+        callButton2.href = `tel:${additionalPhone}`;
+        callButton2.className = 'call-button';
+        callButton2.textContent = '학부모';
+    } else {
+        callButton2.textContent = '-';
+    }
+
+    const noteInput = document.createElement('input');
+    noteInput.type = 'text';
+    noteInput.placeholder = '출결 특이사항';
+    noteInput.classList.add('note-input');
+
+    participantDiv.appendChild(numberButton);
+    participantDiv.appendChild(serialDiv);
+    participantDiv.appendChild(statusButton);
+    
+    if (photoUrl) {
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.alt = 'Participant Image';
+        img.classList.add('participant-img');
+        participantDiv.appendChild(img);
+    }
+
+    participantDiv.appendChild(nameDiv);
+    participantDiv.appendChild(callButton1);
+    participantDiv.appendChild(callButton2);
+    participantDiv.appendChild(noteInput);
+
+    let clickCount = 0;
+    statusButton.onclick = () => {
+        clickCount++;
+        switch (clickCount) {
+            case 1:
+                participantDiv.style.backgroundColor = 'lightskyblue'; /* 연한 하늘색 */
+                statusButton.textContent = '출석';
+                break;
+            case 2:
+                participantDiv.style.backgroundColor = 'lightpink';
+                statusButton.textContent = '지각';
+                break;
+            case 3:
+                participantDiv.style.backgroundColor = 'red';
+                statusButton.textContent = '결석';
+                break;
+            case 4:
+                clickCount = 0;
+                participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
+                statusButton.textContent = '터치';
+                break;
+        }
+
+        // Update summary counts
+        updateSummaryCounts();
+    };
+
+    return participantDiv;
+}
+
+async function displayParticipants() {
+    const data = await fetchSheetData();
+    const container = document.getElementById('participants');
+    data.slice(1).forEach((participantData, index) => {
+        const participantElement = createParticipantElement(participantData, index );
+        container.appendChild(participantElement);
+    });
+}
+
+window.onload = () => {
+    displayParticipants();
+    showDateInfo();
+};
+
+// Reset button element
+const resetButton = document.getElementById('reset-button');
+resetButton.onclick = () => {
+    const participantElements = document.querySelectorAll('.participant');
+    participantElements.forEach(element => {
+        element.style.backgroundColor = element.dataset.defaultColor;
+    });
+};
+
+// Capture button element
+const captureButton = document.getElementById('capture-button');
+captureButton.onclick = () => {
+    // Capture the container element
+    html2canvas(document.querySelector('.container')).then(canvas => {
+        // Convert the canvas to image
+        const imageData = canvas.toDataURL();
+        // Create a link element to download the image
+        const link = document.createElement('a');
+        link.download = 'attendance.png';
+        link.href = imageData;
+        // Trigger the click event to start downloading
+        link.click();
+    });
+};
+
+// Summary button elements
+const attendanceSummaryButton = document.getElementById('attendance-summary');
+const tardySummaryButton = document.getElementById('tardy-summary');
+const absentSummaryButton = document.getElementById('absent-summary');
+
+attendanceSummaryButton.onclick = updateSummaryCounts;
+tardySummaryButton.onclick = updateSummaryCounts;
+absentSummaryButton.onclick = updateSummaryCounts;
+
+// 전체 출석 버튼 클릭 시
+const allAttendanceButton = document.getElementById('all-attendance-button');
+allAttendanceButton.onclick = () => {
+    const statusButtons = document.querySelectorAll('.status-button');
+    statusButtons.forEach(button => {
+        button.textContent = '출석';
+        button.parentElement.style.backgroundColor = 'lightskyblue'; /* 연한 하늘색 */
+    });
+
+    // Update summary counts
+    updateSummaryCounts();
+};
+
+// Function to show today's date and day of the week
+function showDateInfo() {
+    const dateInfoElement = document.getElementById('date-info');
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    const dateString = today.toLocaleDateString('ko-KR', options);
+    dateInfoElement.textContent = dateString;
+}
+
+// Function to update summary counts
+function updateSummaryCounts() {
+    const participantElements = document.querySelectorAll('.participant');
+    let attendanceCount = 0;
+    let tardyCount = 0;
+    let absentCount = 0;
+    participantElements.forEach(element => {
+        const statusButton = element.querySelector('.status-button');
+        const backgroundColor = window.getComputedStyle(element).getPropertyValue('background-color');
+        if (statusButton.textContent === '출석') {
+            attendanceCount++;
+        } else if (statusButton.textContent === '지각') {
+            tardyCount++;
+        } else if (statusButton.textContent === '결석') {
+            absentCount++;
+        }
+    });
+    attendanceSummaryButton.textContent = `출석: ${attendanceCount}`;
+    tardySummaryButton.textContent = `지각: ${tardyCount}`;
+    absentSummaryButton.textContent = `결석: ${absentCount}`;
+}
+</script>
+
+</body>
+</html>
