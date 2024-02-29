@@ -259,260 +259,288 @@
 <div style="height: 50px;"></div>
 
 <script>
-async function fetchSheetData() {
-    const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
-    const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
-    const range = 'Sheet307';
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+    async function fetchSheetData() {
+        const sheetId = '1JsMGoD5enBE0EtMfihOy_58HcG1dzcDfEtxn2M0Y65Q';
+        const apiKey = 'AIzaSyDrClgUbT-0cFoYe4W81dyxikZVbjVlcT8';
+        const range = 'Sheet307';
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.values;
-    } catch (error) {
-        console.error('Error fetching sheet data:', error);
-        return [];
-    }
-}
-
-function createParticipantElement(participantData, index) {
-    const [serial, name, phone, additionalPhone, photoUrl] = participantData;
-    const participantDiv = document.createElement('div');
-    participantDiv.classList.add('participant');
-    participantDiv.dataset.defaultColor = '#ffffff';
-    const numberButton = document.createElement('button');
-    numberButton.textContent = index + 1;
-    numberButton.classList.add('number-button');
-    const statusButton = document.createElement('button');
-    statusButton.textContent = '터치';
-    statusButton.classList.add('status-button');
-    const serialDiv = document.createElement('div');
-    serialDiv.textContent = serial;
-    serialDiv.classList.add('serial-number');
-    const nameDiv = document.createElement('div');
-    nameDiv.textContent = name || '-';
-    nameDiv.classList.add('name-box');
-    participantDiv.appendChild(numberButton);
-    participantDiv.appendChild(statusButton);
-    participantDiv.appendChild(serialDiv);
-    participantDiv.appendChild(nameDiv);
-
-    if (phone) {
-        const callButton1 = document.createElement('a');
-        callButton1.href = `tel:${phone}`;
-        callButton1.textContent = '전화';
-        callButton1.classList.add('call-button');
-        participantDiv.appendChild(callButton1);
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.values;
+        } catch (error) {
+            console.error('Error fetching sheet data:', error);
+            return [];
+        }
     }
 
-    if (additionalPhone) {
-        const callButton2 = document.createElement('a');
-        callButton2.href = `tel:${additionalPhone}`;
-        callButton2.textContent = '학부모';
-        callButton2.classList.add('call-button');
-        participantDiv.appendChild(callButton2);
+    function createParticipantElement(participantData, index) {
+        const [serial, name, phone, additionalPhone, photoUrl] = participantData;
+
+        const participantDiv = document.createElement('div');
+        participantDiv.classList.add('participant');
+        participantDiv.dataset.defaultColor = '#ffffff';
+
+        const numberButton = document.createElement('button');
+        numberButton.textContent = index + 1;
+        numberButton.classList.add('number-button');
+
+        const statusButton = document.createElement('button');
+        statusButton.textContent = '터치';
+        statusButton.classList.add('status-button');
+
+        const serialDiv = document.createElement('div');
+        serialDiv.textContent = serial;
+        serialDiv.classList.add('serial-number');
+        serialDiv.style.marginRight = '10px';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = name || '-';
+        nameDiv.classList.add('name-box');
+
+        participantDiv.appendChild(numberButton);
+        participantDiv.appendChild(statusButton);
+        participantDiv.appendChild(serialDiv);
+        participantDiv.appendChild(nameDiv);
+
+        if (phone && phone.trim() !== '') {
+            const callButton1 = document.createElement('a');
+            callButton1.href = `tel:${phone}`;
+            callButton1.className = 'call-button';
+            callButton1.textContent = '전화';
+            participantDiv.appendChild(callButton1);
+        }
+
+        if (additionalPhone && additionalPhone.trim() !== '') {
+            const callButton2 = document.createElement('a');
+            callButton2.href = `tel:${additionalPhone}`;
+            callButton2.className = 'call-button';
+            callButton2.textContent = '학부모';
+            participantDiv.appendChild(callButton2);
+        }
+
+        if (photoUrl) {
+            const img = document.createElement('img');
+            img.src = photoUrl;
+            img.alt = 'Participant Image';
+            img.classList.add('participant-img');
+            participantDiv.insertBefore(img, statusButton.nextSibling);
+        }
+
+        let clickCount = 0;
+        statusButton.onclick = () => {
+            clickCount++;
+            switch (clickCount) {
+                case 1:
+                    participantDiv.style.backgroundColor = 'lightskyblue';
+                    statusButton.textContent = '출석';
+                    break;
+                case 2:
+                    participantDiv.style.backgroundColor = 'lightpink';
+                    statusButton.textContent = '지각';
+                    break;
+                case 3:
+                    participantDiv.style.backgroundColor = 'red';
+                    statusButton.textContent = '결석';
+                    break;
+                case 4:
+                    clickCount = 0;
+                    participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
+                    statusButton.textContent = '터치';
+                    break;
+            }
+
+            updateSummaryCounts();
+            saveParticipantState(index, { clickCount, status: statusButton.textContent, backgroundColor: participantDiv.style.backgroundColor });
+        };
+
+        restoreParticipantState(participantDiv, index, (state) => {
+            clickCount = state.clickCount;
+            statusButton.textContent = state.status;
+            participantDiv.style.backgroundColor = state.backgroundColor;
+        });
+
+        return participantDiv;
     }
 
-    if (photoUrl) {
-        const img = document.createElement('img');
-        img.src = photoUrl;
-        img.alt = 'Participant Image';
-        img.classList.add('participant-img');
-        participantDiv.appendChild(img);
+    function saveParticipantState(index, state) {
+        const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
+        participantsState[index] = state;
+        localStorage.setItem('participantsState', JSON.stringify(participantsState));
     }
 
-    let clickCount = 0; // 참가자별 클릭 횟수 초기화
-    statusButton.onclick = () => {
-        // 클릭할 때마다 clickCount 증가, 모듈러 연산으로 상태 순환
-        clickCount = (clickCount % 3) + 1; // 1(출석) -> 2(지각) -> 3(결석) -> 1(출석)...
-        updateParticipantStatus(participantDiv, statusButton, clickCount, index);
-    };
-
-    restoreParticipantState(participantDiv, index, (state) => {
-        clickCount = state.clickCount; // 저장된 clickCount 복원
-        updateParticipantStatus(participantDiv, statusButton, clickCount, index);
-    });
-
-    return participantDiv;
-}
-
-function updateParticipantStatus(participantDiv, statusButton, clickCount, index) {
-    let status;
-    switch (clickCount % 4) { // 4 상태 순환: 터치(0) -> 출석(1) -> 지각(2) -> 결석(3)
-        case 1:
-            participantDiv.style.backgroundColor = 'lightskyblue';
-            status = '출석';
-            break;
-        case 2:
-            participantDiv.style.backgroundColor = 'lightpink';
-            status = '지각';
-            break;
-        case 3:
-            participantDiv.style.backgroundColor = 'red';
-            status = '결석';
-            break;
-        default:
-            participantDiv.style.backgroundColor = participantDiv.dataset.defaultColor;
-            status = '터치';
-            clickCount = 0; // '터치' 상태로 돌아가면 clickCount를 리셋
-            break;
+    function restoreParticipantState(participantDiv, index, callback) {
+        const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
+        const state = participantsState[index];
+        if (state) {
+            callback(state);
+        }
     }
-    statusButton.textContent = status;
-    saveParticipantState(index, { clickCount, status, backgroundColor: participantDiv.style.backgroundColor });
-}
 
-function saveParticipantState(index, state) {
-    const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
-    participantsState[index] = state;
-    localStorage.setItem('participantsState', JSON.stringify(participantsState));
-}
-
-function restoreParticipantState(participantDiv, index, callback) {
-    const participantsState = JSON.parse(localStorage.getItem('participantsState') || '{}');
-    const state = participantsState[index];
-    if (state) {
-        callback(state);
+    async function displayParticipants() {
+        const data = await fetchSheetData();
+        const container = document.getElementById('participants');
+        data.slice(1).forEach((participantData, index) => {
+            const participantElement = createParticipantElement(participantData, index);
+            container.appendChild(participantElement);
+        });
     }
-}
 
-async function displayParticipants() {
-    const data = await fetchSheetData();
-    const container = document.getElementById('participants');
-    data.slice(1).forEach((participantData, index) => {
-        const participantElement = createParticipantElement(participantData, index);
-        container.appendChild(participantElement);
-    });
-}
+    function showDateInfo() {
+        const dateInfoElement = document.getElementById('date-info');
+        const today = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        const dateString = today.toLocaleDateString('ko-KR', options);
+        dateInfoElement.textContent = dateString;
+    }
 
-function showDateInfo() {
-    const dateInfoElement = document.getElementById('date-info');
+    function restoreEventData() {
+        const eventNameInput = document.getElementById('event-name-input');
+        const noteInput = document.getElementById('note-input');
+
+        const eventName = localStorage.getItem('eventName');
+        const note = localStorage.getItem('note');
+
+        if (eventName) {
+            eventNameInput.value = eventName;
+        }
+        if (note) {
+            noteInput.value = note;
+        }
+
+        eventNameInput.addEventListener('input', function() {
+            localStorage.setItem('eventName', this.value);
+        });
+        noteInput.addEventListener('input', function() {
+            localStorage.setItem('note', this.value);
+        });
+    }
+
+    function updateSummaryCounts() {
+        let attendanceCount = 0;
+        let tardyCount = 0;
+        let absentCount = 0;
+
+        const participantElements = document.querySelectorAll('.participant');
+        participantElements.forEach(element => {
+            const statusButton = element.querySelector('.status-button');
+            if (statusButton.textContent === '출석') {
+                attendanceCount++;
+            } else if (statusButton.textContent === '지각') {
+                tardyCount++;
+            } else if (statusButton.textContent === '결석') {
+                absentCount++;
+            }
+        });
+
+        const attendanceSummaryButton = document.getElementById('attendance-summary');
+        const tardySummaryButton = document.getElementById('tardy-summary');
+        const absentSummaryButton = document.getElementById('absent-summary');
+        attendanceSummaryButton.textContent = `출석: ${attendanceCount}`;
+        tardySummaryButton.textContent = `지각: ${tardyCount}`;
+        absentSummaryButton.textContent = `결석: ${absentCount}`;
+
+        localStorage.setItem('attendanceCount', attendanceCount);
+        localStorage.setItem('tardyCount', tardyCount);
+        localStorage.setItem('absentCount', absentCount);
+    }
+
+    function setupButtons() {
+        const allAttendanceButton = document.getElementById('all-attendance-button');
+        const resetButton = document.getElementById('reset-button');
+
+        allAttendanceButton.addEventListener('click', function() {
+            document.querySelectorAll('.participant').forEach((participant, index) => {
+                const statusButton = participant.querySelector('.status-button');
+                if (statusButton.textContent !== '출석') {
+                    statusButton.textContent = '출석';
+                    participant.style.backgroundColor = 'lightskyblue';
+                    saveParticipantState(index, { clickCount: 1, status: '출석', backgroundColor: 'lightskyblue' });
+                }
+            });
+            updateSummaryCounts();
+        });
+
+        resetButton.addEventListener('click', function() {
+            localStorage.clear();
+            location.reload();
+        });
+
+        const copyButton = document.getElementById('copy-button'); // '복사' 버튼의 ID가 'copy-button'으로 변경됨
+        if (copyButton) {
+            copyButton.addEventListener('click', copyAttendanceStatus);
+        }
+    }
+
+    function copyAttendanceStatus() {
     const today = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    const dateString = today.toLocaleDateString('ko-KR', options);
-    dateInfoElement.textContent = dateString;
-}
+    const dateString = today.toLocaleDateString('ko-KR', options); // 오늘 날짜와 요일
 
-function restoreEventData() {
     const eventNameInput = document.getElementById('event-name-input');
-    const noteInput = document.getElementById('note-input');
-    const eventName = localStorage.getItem('eventName');
-    const note = localStorage.getItem('note');
-    if (eventName) eventNameInput.value = eventName;
-    if (note) noteInput.value = note;
-    eventNameInput.addEventListener('input', () => localStorage.setItem('eventName', eventNameInput.value));
-    noteInput.addEventListener('input', () => localStorage.setItem('note', noteInput.value));
-}
+    const eventName = eventNameInput.value; // 행사명 입력 필드에서 행사명 가져오기
 
-function updateSummaryCounts() {
-    let attendanceCount = 0;
-    let tardyCount = 0;
-    let absentCount = 0;
+    const title = `날짜: ${dateString}\n행사명: ${eventName}\n\n`; // 제목 줄에 날짜와 행사명 추가
+
     const participantElements = document.querySelectorAll('.participant');
-    participantElements.forEach(element => {
-        const statusButton = element.querySelector('.status-button');
-        if (statusButton.textContent === '출석') attendanceCount++;
-        else if (statusButton.textContent === '지각') tardyCount++;
-        else if (statusButton.textContent === '결석') absentCount++;
-    });
-    const attendanceSummaryButton = document.getElementById('attendance-summary');
-    const tardySummaryButton = document.getElementById('tardy-summary');
-    const absentSummaryButton = document.getElementById('absent-summary');
-    attendanceSummaryButton.textContent = `출석: ${attendanceCount}`;
-    tardySummaryButton.textContent = `지각: ${tardyCount}`;
-    absentSummaryButton.textContent = `결석: ${absentCount}`;
-    localStorage.setItem('attendanceCount', attendanceCount);
-    localStorage.setItem('tardyCount', tardyCount);
-    localStorage.setItem('absentCount', absentCount);
-}
+    let attendanceList = '출석\n';
+    let tardyList = '지각\n';
+    let absentList = '결석\n';
 
-function updateAllStatusToAttendance() {
-    const participantElements = document.querySelectorAll('.participant');
-    participantElements.forEach((element, index) => {
-        const statusButton = element.querySelector('.status-button');
-        statusButton.textContent = '출석';
-        element.style.backgroundColor = 'lightskyblue';
-        // 올출석 클릭 시 clickCount를 1로 설정하여 '출석' 상태로 초기화
-        saveParticipantState(index, { clickCount: 1, status: '출석', backgroundColor: 'lightskyblue' });
-    });
-    updateSummaryCounts();
-}
-
-function setupButtons() {
-    const allAttendanceButton = document.getElementById('all-attendance-button');
-    const resetButton = document.getElementById('reset-button');
-    allAttendanceButton.addEventListener('click', updateAllStatusToAttendance);
-    resetButton.addEventListener('click', () => {
-        localStorage.clear();
-        location.reload();
-    });
-    // 출석, 지각, 결석 버튼에 대한 이벤트 리스너 추가
-    const attendanceButton = document.getElementById('attendance-summary');
-    const tardyButton = document.getElementById('tardy-summary');
-    const absentButton = document.getElementById('absent-summary');
-    attendanceButton.addEventListener('click', () => copyStatus('출석'));
-    tardyButton.addEventListener('click', () => copyStatus('지각'));
-    absentButton.addEventListener('click', () => copyStatus('결석'));
-}
-
-function copyStatus(statusToCopy) {
-    // 날짜와 행사명을 포함한 제목 텍스트 가져오기
-    let titleText = getTitleText();
-    let statusList = `${statusToCopy}\n`;
-    const participantElements = document.querySelectorAll('.participant');
-    participantElements.forEach(element => {
+    participantElements.forEach((element) => {
         const serialDiv = element.querySelector('.serial-number'); // 학번
         const nameDiv = element.querySelector('.name-box');
         const statusButton = element.querySelector('.status-button');
-        if (statusButton.textContent === statusToCopy) {
-            const participantInfo = `${serialDiv.textContent}. ${nameDiv.textContent} - ${statusButton.textContent}\n`;
-            statusList += participantInfo;
+        const participantInfo = `${serialDiv.textContent}. ${nameDiv.textContent} - ${statusButton.textContent}\n`;
+
+        switch (statusButton.textContent) {
+            case '출석':
+                attendanceList += participantInfo;
+                break;
+            case '지각':
+                tardyList += participantInfo;
+                break;
+            case '결석':
+                absentList += participantInfo;
+                break;
         }
     });
+
     // 복사할 텍스트에 제목 줄 추가
-    const textToCopy = titleText + statusList;
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        alert(`${statusToCopy} 상태의 참가자 목록이 클립보드에 복사되었습니다.`);
+    const attendanceText = title + attendanceList + '\n' + tardyList + '\n' + absentList;
+    navigator.clipboard.writeText(attendanceText).then(() => {
+        alert('출결 상태가 클립보드에 복사되었습니다.');
     }, (err) => {
         console.error('클립보드 복사 실패:', err);
     });
 }
 
-// 날짜와 행사명을 포함한 제목 텍스트를 생성하는 함수
-function getTitleText() {
-    const dateInfoElement = document.getElementById('date-info');
-    const eventNameInput = document.getElementById('event-name-input');
-    const eventName = eventNameInput.value.trim(); // 행사명 입력 필드에서 행사명 가져오기 및 공백 제거
-    let titleText = `날짜: ${dateInfoElement.textContent}\n`;
-    if (eventName) {
-        titleText += `행사명: ${eventName}\n\n`;
-    }
-    return titleText;
-}
 
-function restoreParticipantStates() {
-    const participantElements = document.querySelectorAll('.participant');
-    participantElements.forEach((element, index) => {
-        restoreParticipantState(element, index, (state) => {
-            const statusButton = element.querySelector('.status-button');
-            element.style.backgroundColor = state.backgroundColor;
-            statusButton.textContent = state.status;
-            if (state.clickCount !== 0) {
-                updateSummaryCounts();
-            }
+    function restoreParticipantStates() {
+        const participantElements = document.querySelectorAll('.participant');
+        participantElements.forEach((element, index) => {
+            restoreParticipantState(element, index, (state) => {
+                const statusButton = element.querySelector('.status-button');
+                element.style.backgroundColor = state.backgroundColor;
+                statusButton.textContent = state.status;
+                // 터치 횟수가 0이 아닌 경우에만 상태를 업데이트
+                if (state.clickCount !== 0) {
+                    updateSummaryCounts();
+                }
+            });
         });
-    });
-}
+    }
 
-window.onload = async () => {
-    await displayParticipants();
-    showDateInfo();
-    setupButtons();
-    restoreParticipantStates();
-    restoreEventData();
-    updateSummaryCounts();
-};
+    window.onload = async () => {
+        await displayParticipants();
+        showDateInfo();
+        setupButtons();
+        restoreParticipantStates();
+        restoreEventData();
+        updateSummaryCounts();
+    };
 </script>
-
 
 </body>
 </html>
